@@ -1,0 +1,46 @@
+#include <iostream>
+#include <Windows.h>
+
+using namespace std;
+
+void RecordMacro() {
+    INPUT input;
+    input.type = INPUT_KEYBOARD;
+    input.ki.wScan = 0;
+    input.ki.time = 0;
+    input.ki.dwExtraInfo = 0;
+    // Replace with the desired key code:
+    input.ki.wVk = VK_RETURN;
+    input.ki.dwFlags = 0;
+    SendInput(1, &input, sizeof(INPUT));
+}
+
+void PlayMacro() {
+    INPUT input;
+    input.type = INPUT_KEYBOARD;
+    input.ki.wScan = 0;
+    input.ki.time = 0;
+    input.ki.dwExtraInfo = 0;
+    // Replace with the desired key code:
+    input.ki.wVk = VK_RETURN;
+    input.ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput(1, &input, sizeof(INPUT));
+}
+
+int main() {
+    cout << "Press 'r' to record macro, 'p' to play macro, or 'q' to quit." << endl;
+    while (true) {
+        if (GetAsyncKeyState('r') & 0x8000) {
+            RecordMacro();
+            cout << "Macro recorded." << endl;
+        }
+        if (GetAsyncKeyState('p') & 0x8000) {
+            PlayMacro();
+            cout << "Macro played." << endl;
+        }
+        if (GetAsyncKeyState('q') & 0x8000) {
+            break;
+        }
+    }
+    return 0;
+}
