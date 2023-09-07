@@ -1,0 +1,16 @@
+KeyPress(KeyA),394
+KeyRelease(KeyA),553
+KeyPress(KeyB),556
+KeyRelease(KeyB),675
+KeyPress(KeyC),780
+KeyRelease(KeyC),955
+KeyPress(KeyD),1089
+KeyRelease(KeyD),1196
+KeyPress(KeyE),1321
+KeyRelease(KeyE),1464
+KeyPress(KeyF),3317
+KeyRelease(KeyF),3440
+KeyPress(KeyG),3910
+KeyRelease(KeyG),4029
+KeyPress(ControlLeft),4339
+KeyPress(KeyC),4436
