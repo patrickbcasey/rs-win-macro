@@ -14,6 +14,7 @@ serde = { version = "1", features = ["derive"] }
 once_cell = "1.18"
 strum = "0.25"
 strum_macros = "0.25"
+clap = { version = "4.4", features = ["derive", "cargo"] }
 
 [dependencies.windows]
 version = "0.51"
