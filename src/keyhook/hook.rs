@@ -1,0 +1,70 @@
+use std::{
+  ffi::{c_int, c_ulong, c_ushort},
+  mem::{size_of, MaybeUninit},
+  ptr::null_mut,
+  sync::atomic::{ AtomicPtr, Ordering },
+  sync::{ Arc, Mutex },
+  thread::spawn, time::SystemTime,
+};
+use once_cell::sync::Lazy;
+use crate::keyhook::structs::*;
+
+
+use windows::Win32::{
+  Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM},
+    UI::{
+        Input::KeyboardAndMouse::{
+            GetAsyncKeyState, GetKeyState, MapVirtualKeyW, SendInput, INPUT, INPUT_0,
+            INPUT_KEYBOARD, INPUT_MOUSE, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
+            KEYEVENTF_SCANCODE, MAP_VIRTUAL_KEY_TYPE, VIRTUAL_KEY,
+        },
+        WindowsAndMessaging::{
+            CallNextHookEx, GetCursorPos, GetMessageW, SetCursorPos, SetWindowsHookExW,
+            UnhookWindowsHookEx, HHOOK, KBDLLHOOKSTRUCT, MSG, MSLLHOOKSTRUCT, WH_KEYBOARD_LL,
+            WH_MOUSE_LL, WINDOWS_HOOK_ID, WM_KEYDOWN, WM_LBUTTONDOWN, WM_MBUTTONDOWN,
+            WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_XBUTTONDOWN, XBUTTON1, XBUTTON2,
+        },
+    },
+};
+
+const NULL_HHOOK: HHOOK = HHOOK(0);
+static KEYBD_HHOOK: Lazy<AtomicPtr<HHOOK>> = Lazy::new(AtomicPtr::default);
+
+pub fn handle_inputs() {
+  set_hook(WH_KEYBOARD_LL, &KEYBD_HHOOK, keybd_proc);
+  let mut msg: MSG = unsafe { MaybeUninit::zeroed().assume_init() };
+  unsafe { GetMessageW(&mut msg, HWND(0), 0, 0) };
+}
+
+
+
+
+unsafe extern "system" fn keybd_proc(code: c_int, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
+  todo!("Handle keybinds");
+  if KEYBD_BINDS.lock().unwrap().is_empty() {
+    unset_hook(&KEYBD_HHOOK);
+  } else if w_param.0 as u32 == WM_KEYDOWN || w_param.0 as u32 == WM_SYSKEYDOWN {
+    let kb = *(l_param.0 as *const KBDLLHOOKSTRUCT);
+    let scan = kb.scanCode;
+
+  }
+  /// Hook Procedure
+
+  CallNextHookEx(NULL_HHOOK, code, w_param, l_param)
+}
+
+fn set_hook(
+  hook_id: WINDOWS_HOOK_ID,
+  hook_ptr: &AtomicPtr<HHOOK>,
+  hook_proc: unsafe extern "system" fn(c_int, WPARAM, LPARAM) -> LRESULT,
+) {
+  hook_ptr.store(
+    unsafe { &mut SetWindowsHookExW(hook_id, Some(hook_proc), HINSTANCE(0), 0) .unwrap() },
+    Ordering::Relaxed,
+   );
+}
+
+fn unset_hook(hook_ptr: &AtomicPtr<HHOOK>) {
+  unsafe { UnhookWindowsHookEx(*hook_ptr.load(Ordering::Relaxed)).unwrap(); }
+  hook_ptr.store(null_mut(), Ordering::Relaxed);
+}
