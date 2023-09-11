@@ -31,22 +31,42 @@ fn main() {
 
     match matches.get_one::<bool>("mode") {
         Some(true) => {
-            let move_list = build_move_list(path); 
+            let move_list = build_move_list(path);
+            let loot_list = build_move_list(PathBuf::from("./loot.txt"));
             loop {
                 if unsafe { GetAsyncKeyState(i32::from(code_from_key(Num0).unwrap())) } < 0 {
                     println!("key pressed");
-                    for i in move_list.iter() {
-                        if unsafe { GetAsyncKeyState(i32::from(code_from_key(Num9).unwrap())) } < 0 {
-                            println!("Breaking out");
-                            break;
+                    thread::sleep(time::Duration::from_millis(1000));
+                    'label: loop {
+                         for _ in 0..4 {
+                            for i in move_list.iter() {
+                                if unsafe { GetAsyncKeyState(i32::from(code_from_key(Num9).unwrap())) } < 0 {
+                                    println!("Breaking out");
+                                    break 'label;
+                                }
+                                send(&i.event_type);
+                                thread::sleep(i.time);
+                                // let y = (random::<f64>() * 4.0) as u64;
+                                // match random::<bool>() {
+                                //     true => thread::sleep(i.time + time::Duration::from_millis(y)),
+                                //     false => thread::sleep(if i.time.checked_sub(time::Duration::from_millis(y)).is_some() { i.time - time::Duration::from_millis(y) } else { i.time }),
+                                // };
+                            }
                         }
-                        send(&i.event_type);
-                        let y: u64 = (random::<f64>() * 11.0) as u64;
-                        match random::<bool>() {
-                            true => thread::sleep(i.time + time::Duration::from_millis(y)),
-                            false => thread::sleep(i.time - time::Duration::from_millis(y)),
-                        };
+                        
+                        thread::sleep(time::Duration::from_millis(50));
+                        for i in loot_list.iter() {
+                            if unsafe { GetAsyncKeyState(i32::from(code_from_key(Num9).unwrap())) } < 0 {
+                                println!("Breaking out");
+                                break 'label;
+                            }
+                            send(&i.event_type);
+                            thread::sleep(i.time);
+                        }
                     }
+                }
+                
+                if unsafe { GetAsyncKeyState(i32::from(code_from_key(Num1).unwrap())) } < 0 {
                     break;
                 }
             }
@@ -70,14 +90,12 @@ fn main() {
 
 
 fn send(event_type: &EventType) -> () {
-    let delay = std::time::Duration::from_millis(1000);
     match simulate(event_type) {
         Ok(()) => (),
         Err(SimulateError) => {
             println!("We could not send {:?}", event_type);
         }
     }
-    thread::sleep(delay);
 }
 
 
@@ -85,8 +103,8 @@ fn send(event_type: &EventType) -> () {
 fn callback(event: Event) -> Option<(SystemTime, EventType)>{
 
     match event.event_type {
-        EventType::KeyPress(key) => Some((event.time, event.event_type)),
-        EventType::KeyRelease(key) => Some((event.time, event.event_type)),
+        EventType::KeyPress(_key) => Some((event.time, event.event_type)),
+        EventType::KeyRelease(_key) => Some((event.time, event.event_type)),
         _ => None,
     }
 }
@@ -94,7 +112,7 @@ fn callback(event: Event) -> Option<(SystemTime, EventType)>{
 fn build_move_list(file_string: PathBuf) -> Vec<Move> {
     let instructions = read_to_string(file_string).expect("cannot read file");
     let moves_string = instructions.trim().replace(')', "");
-    let moves: Vec<&str> = moves_string.split("\r\n").collect::<Vec<&str>>().into_iter().flat_map(|x| x.split(&[',', '('])).collect();
+    let moves: Vec<&str> = moves_string.split("\n").collect::<Vec<&str>>().into_iter().flat_map(|x| x.split(&[',', '('])).collect();
     let grouping = moves.chunks(3).into_iter();
     let timers: Vec<Move> = grouping.map(|x| {
         match x[0] {
@@ -114,7 +132,6 @@ fn build_move_list(file_string: PathBuf) -> Vec<Move> {
         move_list.push(Move { event_type: timers[i].event_type, time: timers[i].time - timers[i-1].time });
     }   
     
-    println!("{:?}", move_list);
     move_list
 }
 
@@ -131,10 +148,10 @@ fn recording(file_string: PathBuf) {
         move |event: Event| {
         
         match event.event_type {
-            EventType::KeyPress(key) => {
+            EventType::KeyPress(_key) => {
                 data_file.write_all(format!("{:?},{:?}\n", event.event_type, event.time.duration_since(clock).unwrap().as_millis()).as_bytes()).expect("cannot write to file");
             },
-            EventType::KeyRelease(key) => {
+            EventType::KeyRelease(_key) => {
                 data_file.write_all(format!("{:?},{:?}\n", event.event_type, event.time.duration_since(clock).unwrap().as_millis()).as_bytes()).expect("cannot write to file");
             },
             _ => (),

@@ -26,16 +26,17 @@ pub fn match_string_to_key(s: &str) -> rdev::Key {
     "F9" => F9,
     "Home" => Home,
     "LeftArrow" => LeftArrow,
-    /// also known as "windows" "super" and "command"
+    // also known as "windows" "super" and "command"
     "MetaLeft" => MetaLeft,
-    /// also known as "windows" "super" and "command"
+    // also known as "windows" "super" and "command"
     "MetaRight" => MetaRight,
     "PageDown" => PageDown,
     "PageUp" => PageUp,
     "Return" => Return,
     "RightArrow" => RightArrow,
     "ShiftLeft" => ShiftLeft,
-    "ShiftRight" => ShiftRight,
+    // ShiftRight input not working correctly
+    "ShiftRight" => ShiftLeft,
     "Space" => Space,
     "Tab" => Tab,
     "UpArrow" => UpArrow,

@@ -1,10 +1,8 @@
 use std::{
-  ffi::{c_int, c_ulong, c_ushort},
-  mem::{size_of, MaybeUninit},
+  ffi::c_int,
+  mem::MaybeUninit,
   ptr::null_mut,
   sync::atomic::{ AtomicPtr, Ordering },
-  sync::{ Arc, Mutex },
-  thread::spawn, time::SystemTime,
 };
 use once_cell::sync::Lazy;
 use crate::keyhook::structs::*;
@@ -12,19 +10,11 @@ use crate::keyhook::structs::*;
 
 use windows::Win32::{
   Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM},
-    UI::{
-        Input::KeyboardAndMouse::{
-            GetAsyncKeyState, GetKeyState, MapVirtualKeyW, SendInput, INPUT, INPUT_0,
-            INPUT_KEYBOARD, INPUT_MOUSE, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
-            KEYEVENTF_SCANCODE, MAP_VIRTUAL_KEY_TYPE, VIRTUAL_KEY,
+    UI::WindowsAndMessaging::{
+            CallNextHookEx, GetMessageW, SetWindowsHookExW,
+            UnhookWindowsHookEx, HHOOK, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL,
+            WINDOWS_HOOK_ID, WM_KEYDOWN, WM_SYSKEYDOWN,
         },
-        WindowsAndMessaging::{
-            CallNextHookEx, GetCursorPos, GetMessageW, SetCursorPos, SetWindowsHookExW,
-            UnhookWindowsHookEx, HHOOK, KBDLLHOOKSTRUCT, MSG, MSLLHOOKSTRUCT, WH_KEYBOARD_LL,
-            WH_MOUSE_LL, WINDOWS_HOOK_ID, WM_KEYDOWN, WM_LBUTTONDOWN, WM_MBUTTONDOWN,
-            WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_XBUTTONDOWN, XBUTTON1, XBUTTON2,
-        },
-    },
 };
 
 const NULL_HHOOK: HHOOK = HHOOK(0);
@@ -48,7 +38,7 @@ unsafe extern "system" fn keybd_proc(code: c_int, w_param: WPARAM, l_param: LPAR
     let scan = kb.scanCode;
 
   }
-  /// Hook Procedure
+  // Hook Procedure
 
   CallNextHookEx(NULL_HHOOK, code, w_param, l_param)
 }
